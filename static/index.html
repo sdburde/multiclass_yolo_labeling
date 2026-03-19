@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MultiLabel · Annotation Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div class="logo">MultiLabel <em>· YOLO Annotator</em></div>
+  <div id="path-display" onclick="openBrowser()">📂  Click to open dataset folder…</div>
+  <div class="sep"></div>
+  <button class="btn" id="btn-prev" onclick="navigate(-1)" disabled>◀ Prev</button>
+  <span id="nav-info" style="font-family:var(--mono);font-size:11px;color:var(--text3)">—</span>
+  <button class="btn" id="btn-next" onclick="navigate(1)" disabled>Next ▶</button>
+  <div class="sep"></div>
+  <button class="btn success" id="btn-save" onclick="saveLabels()" disabled>💾 Save  S</button>
+</div>
+
+<!-- BROWSER MODAL -->
+<div id="browser-overlay">
+  <div id="browser-modal">
+    <div class="modal-head">
+      <h3>📁 Open Dataset Folder</h3>
+      <button class="btn sm" onclick="closeBrowser()">✕ Close</button>
+    </div>
+    <div style="padding:0;flex-shrink:0">
+      <input id="browser-path-input" type="text" placeholder="Type or paste a path and press Enter…"
+             onkeydown="if(event.key==='Enter')browseDir(this.value)">
+    </div>
+    <div id="browser-entries"></div>
+    <div class="modal-foot">
+      <div id="browser-status">Navigate to a folder containing images or session sub-folders</div>
+      <button class="btn" onclick="closeBrowser()">Cancel</button>
+      <button class="btn primary" id="btn-load-ds" onclick="loadSelectedDataset()" disabled>Open Dataset ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- SESSIONS -->
+  <div id="session-panel">
+    <div class="ph">Sessions <span class="cnt" id="sess-cnt">0</span></div>
+    <div id="session-list"></div>
+  </div>
+
+  <!-- IMAGES -->
+  <div id="img-panel">
+    <div class="ph">Images <span class="cnt" id="img-total-cnt">0</span></div>
+    <input id="img-search" type="text" placeholder="Filter…" oninput="filterImgs(this.value)">
+    <div id="img-list"></div>
+    <div id="prog-wrap"><div id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- CANVAS -->
+  <div id="canvas-area">
+    <div id="canvas-toolbar">
+      <div class="cls-dot" id="active-dot"></div>
+      <select id="class-select" onchange="onClassChange()"></select>
+      <div class="tb-sep"></div>
+      <button class="btn sm" id="btn-undo" onclick="undoLast()" disabled>↩ Undo</button>
+      <button class="btn sm" id="btn-clear" onclick="clearAll()" disabled>🗑 Clear</button>
+      <div class="tb-sep"></div>
+      <!-- ZOOM CONTROLS -->
+      <button class="btn sm" onclick="zoomBy(-0.15)" title="Zoom out (Ctrl+Scroll)">−</button>
+      <span id="zoom-label" style="font-family:var(--mono);font-size:11px;color:var(--text2);
+        min-width:38px;text-align:center">100%</span>
+      <button class="btn sm" onclick="zoomBy(+0.15)" title="Zoom in (Ctrl+Scroll)">+</button>
+      <button class="btn sm" onclick="fitToView()" title="Fit image to view (F)">⊡ Fit</button>
+      <button class="btn sm" onclick="zoomTo(1)" title="Reset zoom to 100%">1:1</button>
+      <div class="tb-sep"></div>
+      <!-- PAN MODE -->
+      <button class="btn sm" id="btn-pan" onclick="togglePanMode()"
+        title="Pan mode — hold Space or middle-mouse to pan anytime">✋ Pan</button>
+      <div class="tb-sep"></div>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:auto;white-space:nowrap">
+        <span class="kb">Space</span>pan&nbsp;
+        <span class="kb">F</span>fit&nbsp;
+        <span class="kb">Del</span>del&nbsp;
+        <span class="kb">S</span>save&nbsp;
+        <span class="kb">A</span>/<span class="kb">D</span>nav&nbsp;
+        <span class="kb">0–9</span>class
+      </span>
+    </div>
+
+    <div id="canvas-wrap">
+      <div id="welcome">
+        <div class="wt">MultiLabel</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:2px;margin-top:-4px">YOLO ANNOTATION TOOL</div>
+        <div class="ws">
+          Click the path bar above to browse and open any dataset folder.<br>
+          Reads <code style="color:var(--accent)">image.jpg</code> + paired <code style="color:var(--accent)">image.txt</code> labels automatically.<br>
+          Supports flat folders and nested session folders.
+        </div>
+        <div class="wh">5-value YOLO &nbsp;·&nbsp; 6-value (with confidence) &nbsp;·&nbsp; classes.txt auto-loaded</div>
+      </div>
+      <div id="zoom-viewport">
+        <div id="canvas-container" style="display:none">
+          <img id="bg-img" draggable="false">
+          <canvas id="label-canvas"></canvas>
+        </div>
+      </div>
+      <div id="zoom-hud">100%</div>
+    </div>
+
+    <div id="status-bar">
+      <span>Folder: <span class="sv" id="sb-folder">—</span></span>
+      <span>Image: <span class="sv" id="sb-img">—</span></span>
+      <span>Size: <span class="sv" id="sb-size">—</span></span>
+      <span>Boxes: <span class="sv" id="sb-boxes">0</span></span>
+      <span>Labeled: <span class="sv" id="sb-labeled">0/0</span></span>
+    </div>
+  </div>
+
+  <!-- ANNOTATIONS + CLASS MANAGER -->
+  <div id="right-panel">
+    <div class="ph">Annotations <span class="cnt" id="ann-cnt">0</span></div>
+    <div id="ann-list"></div>
+
+    <div id="cls-panel">
+      <div class="ph">
+        Classes <span class="cnt" id="cls-cnt">0</span>
+        <button class="btn sm" id="btn-save-cls" onclick="saveClasses()" disabled title="Save classes.txt">💾</button>
+      </div>
+      <div id="cls-list"></div>
+      <div id="add-cls-row">
+        <input id="new-cls-inp" type="text" placeholder="Add class name…"
+               onkeydown="if(event.key==='Enter')addClass()">
+        <button class="btn sm primary" onclick="addClass()">+ Add</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div id="toast"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
