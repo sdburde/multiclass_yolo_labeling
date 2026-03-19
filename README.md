@@ -1,10 +1,10 @@
-# MultiLabel – YOLO Annotation Tool
+# MultiLabel YOLO
 
-A modern, feature-rich web-based annotation tool for creating YOLO-format object detection datasets. Built with FastAPI backend and a sleek vanilla JavaScript frontend.
+A modern, web-based annotation tool for creating YOLO-format object detection datasets. Built with FastAPI and a sleek vanilla JavaScript frontend.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
-![FastAPI](https://img.shields.io/badge/fastapi-0.100+-green.svg)
+![PyPI](https://img.shields.io/pypi/v/multilabel-yolo.svg)
 
 ---
 
@@ -23,41 +23,74 @@ A modern, feature-rich web-based annotation tool for creating YOLO-format object
 
 ## 📦 Installation
 
-### 1. Clone or Download
+### From PyPI (Recommended)
 
-Navigate to your project directory:
 ```bash
-cd /path/to/project
+pip install multilabel-yolo
 ```
 
-### 2. Create Virtual Environment (Optional but Recommended)
+### From Source
 
 ```bash
-python -m venv myenv
-source myenv/bin/activate  # On Windows: myenv\Scripts\activate
+git clone https://github.com/sdburde/multiclass_yolo_labeling.git
+cd multiclass_yolo_labeling
+pip install -e .
 ```
 
-### 3. Install Dependencies
+### Development Installation
 
 ```bash
-pip install -r requirements.txt
+pip install -e ".[dev]"
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### Start the Server
+### Run the Application
 
 ```bash
-python main.py
+multilabel-yolo
 ```
 
 The application will start on **http://127.0.0.1:7182**
 
-### Open in Browser
+### Custom Host/Port
 
-Navigate to `http://127.0.0.1:7182` in your web browser.
+```bash
+multilabel-yolo --host 0.0.0.0 --port 8080
+```
+
+### Disable Auto-Reload
+
+```bash
+multilabel-yolo --no-reload
+```
+
+### View Help
+
+```bash
+multilabel-yolo --help
+```
+
+### Using as a Python Library
+
+```python
+from multilabel_yolo import run_server
+
+# Run the server programmatically
+run_server(host="127.0.0.1", port=7182, reload=True)
+```
+
+Or access the FastAPI app directly:
+
+```python
+from multilabel_yolo import app
+
+# Use with your own uvicorn configuration
+import uvicorn
+uvicorn.run(app, host="127.0.0.1", port=7182)
+```
 
 ---
 
@@ -77,7 +110,7 @@ The tool auto-detects:
 
 1. **Select a class** from the dropdown or use number keys `0-9`
 2. **Draw a bounding box**: Click and drag on the image
-3. **Adjust boxes**: 
+3. **Adjust boxes**:
    - Drag from inside to move
    - Drag handles to resize
 4. **Save**: Press `S` or click **💾 Save**
@@ -169,6 +202,8 @@ cat
 
 ## 🛠️ API Endpoints
 
+When running, the application exposes these endpoints at `http://localhost:7182`:
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/` | GET | Serve the main application |
@@ -179,19 +214,21 @@ cat
 | `/api/labels` | POST | Save labels for an image |
 | `/api/save_classes` | POST | Save `classes.txt` |
 
+Interactive API docs available at: `http://localhost:7182/docs`
+
 ---
 
 ## 🎨 Architecture
 
 ```
-project/
-├── main.py              # FastAPI backend
-├── requirements.txt     # Python dependencies
-├── static/
-│   ├── index.html       # Main HTML structure
-│   ├── styles.css       # All styles
-│   └── app.js           # Frontend application logic
-└── myenv/               # Virtual environment (optional)
+multilabel_yolo/
+├── __init__.py       # Package initialization
+├── server.py         # FastAPI backend
+├── cli.py            # Command-line interface
+└── static/
+    ├── index.html    # Main HTML structure
+    ├── styles.css    # All styles
+    └── app.js        # Frontend application logic
 ```
 
 ---
@@ -200,26 +237,20 @@ project/
 
 ### Change Port
 
-Edit `main.py`:
-```python
-uvicorn.run(
-    "main:app",
-    host="127.0.0.1",
-    port=7182,  # Change this
-    reload=True
-)
+```bash
+multilabel-yolo --port 8080
 ```
 
-### Customize Colors
+### Change Host
 
-Edit `static/styles.css` CSS variables:
-```css
-:root {
-  --accent: #5b8cff;    /* Primary accent color */
-  --green: #3ddc84;     /* Success/positive */
-  --warn: #f5a623;      /* Warning */
-  --danger: #ff4f6d;    /* Error/delete */
-}
+```bash
+multilabel-yolo --host 0.0.0.0
+```
+
+### Disable Reload
+
+```bash
+multilabel-yolo --no-reload
 ```
 
 ---
@@ -236,7 +267,7 @@ Edit `static/styles.css` CSS variables:
 
 **Issue:** Images show as broken or don't appear
 
-**Solution:** 
+**Solution:**
 - Verify image formats are supported (`.jpg`, `.jpeg`, `.png`, `.bmp`, `.webp`)
 - Check file permissions
 - Ensure the path doesn't contain special characters
@@ -245,9 +276,37 @@ Edit `static/styles.css` CSS variables:
 
 **Issue:** `Error: [Errno 98] Address already in use`
 
-**Solution:** 
-- Change the port in `main.py`
+**Solution:**
+- Use a different port: `multilabel-yolo --port 8080`
 - Or kill the process using the port: `lsof -i :7182` then `kill <PID>`
+
+### Module Not Found After Install
+
+**Issue:** `ModuleNotFoundError: No module named 'multilabel_yolo'`
+
+**Solution:**
+- Ensure you're using the correct Python environment
+- Reinstall: `pip install --upgrade multilabel-yolo`
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run tests and linting: `pytest && black . && ruff check .`
+5. Submit a pull request
+
+### Development Setup
+
+```bash
+git clone https://github.com/sdburde/multiclass_yolo_labeling.git
+cd multiclass_yolo_labeling
+pip install -e ".[dev]"
+```
 
 ---
 
@@ -257,20 +316,9 @@ MIT License – feel free to use and modify for your projects.
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
----
-
 ## 📧 Support
 
-For issues, questions, or feature requests, please open an issue on the repository.
+For issues, questions, or feature requests, please open an issue on the [GitHub repository](https://github.com/sdburde/multiclass_yolo_labeling/issues).
 
 ---
 

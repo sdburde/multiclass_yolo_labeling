@@ -5,9 +5,13 @@ from pydantic import BaseModel
 from pathlib import Path
 import base64
 from typing import List, Optional
+import uvicorn
 
 app = FastAPI(title="MultiLabel - Universal Annotation Tool")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Get the package directory for static files
+PACKAGE_DIR = Path(__file__).parent
+app.mount("/static", StaticFiles(directory=str(PACKAGE_DIR / "static")), name="static")
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
@@ -135,7 +139,7 @@ def scan_sessions(root: Path):
 
 @app.get("/")
 async def root():
-    return FileResponse("static/index.html")
+    return FileResponse(str(PACKAGE_DIR / "static" / "index.html"))
 
 
 @app.post("/api/browse")
@@ -260,11 +264,12 @@ async def save_classes(req: SaveClassesRequest):
     write_classes(fp, req.classes)
     return {"saved": len(req.classes)}
 
-if __name__ == "__main__":
-    import uvicorn
+
+def run_server(host: str = "127.0.0.1", port: int = 7182, reload: bool = True):
+    """Run the MultiLabel YOLO server."""
     uvicorn.run(
-        "main:app",   # file_name:variable_name
-        host="127.0.0.1",
-        port=7182,
-        reload=True
+        "multilabel_yolo.server:app",
+        host=host,
+        port=port,
+        reload=reload
     )
