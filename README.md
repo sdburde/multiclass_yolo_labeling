@@ -1,4 +1,4 @@
-# MultiLabel YOLO
+# multilabel-yolo
 
 A modern, web-based annotation tool for creating YOLO-format object detection datasets. Built with FastAPI and a sleek vanilla JavaScript frontend.
 
